@@ -1,4 +1,20 @@
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { adminAllowedEmailExists, normalizeAdminEmail } from "./admin-access.repository";
+
+export type AdminApiGateResult = { ok: true } | { ok: false; status: 401 | 403 };
+
+export async function requireAdminApiSession(): Promise<AdminApiGateResult> {
+  const { userId } = await auth();
+  if (!userId) {
+    return { ok: false, status: 401 };
+  }
+  const user = await currentUser();
+  const allowed = await canUserAccessAdminPanel(user?.primaryEmailAddress?.emailAddress);
+  if (!allowed) {
+    return { ok: false, status: 403 };
+  }
+  return { ok: true };
+}
 
 function isAdminAccessAllowAll(): boolean {
   return process.env.ADMIN_ACCESS_ALLOW_ALL === "true";
