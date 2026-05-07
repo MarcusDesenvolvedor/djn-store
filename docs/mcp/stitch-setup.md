@@ -44,23 +44,11 @@ gcloud beta services mcp enable stitch.googleapis.com
 gcloud auth application-default login
 ```
 
-### Step 4: Update `mcp.json`
+### Step 4: Project `mcp.json` (this repo)
 
-Edit `.cursor/mcp.json` and replace `YOUR_PROJECT_ID` with your Google Cloud project ID:
+The repo includes [`.cursor/mcp.json`](../../.cursor/mcp.json) with the **stitch-mcp (NPX)** server wired up. Replace **`REPLACE_ME_GCP_PROJECT_ID`** with your real Google Cloud project ID (the same value you set with `gcloud config set project`).
 
-```json
-{
-  "mcpServers": {
-    "stitch": {
-      "command": "npx",
-      "args": ["-y", "stitch-mcp"],
-      "env": {
-        "GOOGLE_CLOUD_PROJECT": "your-project-id"
-      }
-    }
-  }
-}
-```
+Do **not** commit API keys into this file. If you use the HTTP API key option (below), keep keys out of git or use Cursor **Settings → MCP** for secret values.
 
 ### Step 5: Restart Cursor
 
@@ -126,7 +114,8 @@ That keeps new screens aligned with the existing design system.
 
 ### MCP does not show in Cursor
 
-- Confirm `.cursor/mcp.json` exists at the project root.
+- Confirm `.cursor/mcp.json` exists under the project root (this repo: `.cursor/mcp.json`).
+- Replace `REPLACE_ME_GCP_PROJECT_ID` with a valid GCP project ID if Stitch still fails to authenticate.
 - Fully restart Cursor.
 - In Cursor: **Settings → MCP** and check that the server is listed.
 

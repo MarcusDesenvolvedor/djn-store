@@ -14,6 +14,8 @@ npm run db:migrate
 
 Copy `.env.example` to `.env` and set `DATABASE_URL` and Clerk keys before running migrations or the app.
 
+**Google Stitch (MCP):** configure GCP + replace `REPLACE_ME_GCP_PROJECT_ID` in [`.cursor/mcp.json`](.cursor/mcp.json), then restart Cursor. Full steps: [`docs/mcp/stitch-setup.md`](docs/mcp/stitch-setup.md).
+
 ## Architecture
 
 API route handlers stay thin (Zod + service calls). Business logic in `src/features/*/`.service.ts; Prisma only in `*.repository.ts`.

@@ -1,0 +1,17 @@
+---
+description: Post a summary to Slack #code-log after code changes or completed tasks (MCP Slack)
+alwaysApply: true
+---
+
+## Slack `#code-log` (mandatory when applicable)
+
+When **this turn** changes code in the repo (e.g. edits under `src/`, product `docs/`, build config, etc.) **or** you **finish a user-requested task** that involved such changes, **before you end your reply**:
+
+1. If the **Slack** MCP server is available and authenticated, send **one** summary message to **`#code-log`** using **`slack_send_message`**.
+2. **`channel_id`**: resolve it with **`slack_search_channels`** (query: `code-log`; add `private_channel` to the filter if the channel is private). Use the ID for the channel named `code-log`.
+3. **Message body** (short, no secrets): project name (e.g. DJN Store), what changed, main paths touched, one-sentence goal. No tokens, `.env` values, stack traces, or PII.
+4. If Slack MCP is **unavailable** or auth fails, **do not block** work: tell the user the code-log post was skipped and why.
+
+**Avoid noise:** at most **one** message per turn / task completion; batch multiple edits into one summary.
+
+Use **`slack_send_message`** (not draft) for this audit trail to `#code-log`.
