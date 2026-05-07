@@ -1,0 +1,25 @@
+---
+description: Git and commit conventions for DJN Store
+globs:
+  - "**/*"
+---
+
+## Git workflow
+
+- Default branch: `main`. Keep it shippable; do day-to-day work on feature branches.
+- Branch naming: `feature/<short-name>`, `fix/<short-name>`, `docs/<short-name>`, `chore/<short-name>`.
+- Before committing: run lint/format as required by the project; review `git diff`.
+- Never commit secrets, `.env*`, credentials, or generated artifacts covered by `.gitignore`.
+- Prefer small, logical commits; split unrelated changes.
+
+## Commit messages (Conventional Commits)
+
+- Format: `type(optional-scope): imperative summary` (English).
+- Types: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`, `style`.
+- Summary: imperative mood, ~50 chars, no trailing period; body optional for context.
+- Align commits with layers and features: `docs/mhp/features/*/feature.md` updates can sit with implementation or as a dedicated `docs` commit.
+
+## Pull requests
+
+- Use clear titles and complete sentences in the description: what changed, why, how to verify.
+- Link issues or tasks if the team uses them.

@@ -1,0 +1,42 @@
+---
+description: DJN Store — API, services, repositories (docs/rules workflows)
+globs:
+  - "**/app/api/**"
+  - "**/features/**/*.service.ts"
+  - "**/features/**/*.repository.ts"
+  - "**/features/**/*.schema.ts"
+---
+
+## Before creating or changing an endpoint
+
+Read: the feature `feature.md`, `docs/mhp/business-logic.md`, `docs/mhp/data-model.md`, `docs/rules/workflow-api-endpoint.md`.
+
+## REST and routes
+
+- Methods: GET (read), POST (create), PATCH (update), DELETE (delete).
+- Plural resources; predictable paths. Handlers under `src/app/api/{resource}/route.ts`.
+
+## Validation
+
+- Zod schemas for **all** inputs. Do not leak internal DB structure in responses.
+
+## Auth (Clerk)
+
+- Clerk session where required. **Admin** operations (stock, prices, orders, reporting): authenticated user **and** authorized per `feature.md` and `business-logic.md`.
+
+## Multi-tenant / context
+
+- ARPG scope: filter and validate by **game/catalog** per rules; do not assume per-store `storeId`. Do not mix contexts when forbidden.
+
+## Layers (reinforcement)
+
+- Route → Service → Repository only. Repository: data access only; Service: rules and orchestration.
+
+## Quick checklist
+
+- [ ] Zod at the boundary
+- [ ] Thin handler
+- [ ] Logic in service
+- [ ] Prisma only in repository
+- [ ] Auth/authorization for admin
+- [ ] JSON in standard data/error shape

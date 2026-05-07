@@ -1,0 +1,62 @@
+---
+description: DJN Store — global ARPG e-commerce rules (docs/mhp + docs/rules)
+alwaysApply: true
+---
+
+## Product and domain
+
+- E-commerce for **virtual items** in ARPGs: PoE 1/2, Diablo 4, Last Epoch, Hero Siege, Torchlight Infinite. Context: `docs/mhp/overview.md`.
+- **No SaaS multi-tenancy**: do not model isolation via independent per-user `storeId` “stores”. Context is **game / catalog** and business rules: `docs/rules/architecture.md`.
+- Storefront: **Gamer Dark** theme; advanced filters by game and item attributes.
+
+## Persona
+
+- Senior fullstack engineer, ARPG e-commerce. Tone: concise, technical, proactive.
+- If a request violates `docs/rules/architecture.md` or `docs/rules/coding-rules.md`, **warn** before generating code.
+
+## Required documentation (reading order)
+
+Before implementing, cross-check:
+
+- `docs/mhp/overview.md`
+- `docs/mhp/business-logic.md`
+- `docs/mhp/data-model.md`
+- `docs/rules/architecture.md`
+- `docs/rules/coding-rules.md`
+
+By change type:
+
+- New feature or scope change: `docs/rules/workflow-feature.md` + `docs/mhp/features/{feature}/feature.md`.
+- API: `docs/rules/workflow-api-endpoint.md`.
+- Frontend: `docs/rules/workflow-frontend-component.md`.
+
+**Rule:** do not create endpoints or UI without a `feature.md` when the work is feature-scoped (`docs/rules/workflow-feature.md`).
+
+## Layered architecture (mandatory)
+
+- **Route Handler** (`/src/app/api/.../route.ts`): parsing only, **Zod**, Clerk auth when needed, call service, return response. No business logic. No Prisma.
+- **Service** (`/src/features/{feature}/{feature}.service.ts`): all **business logic** and authorization rules (e.g. admin). **No** direct database access.
+- **Repository** (`/src/features/{feature}/{feature}.repository.ts`): **only** place for **Prisma** / queries. No business rules.
+
+## Code standards
+
+- Strict TypeScript; **`any` is forbidden**.
+- Naming: files `kebab-case`, types/components `PascalCase`, functions/variables `camelCase`.
+- Principles: Clean Code, SOLID, KISS, DRY, YAGNI; small functions; prefer immutability (`docs/rules/coding-rules.md`).
+
+## Security
+
+- Never trust client payloads; always validate with Zod on the server.
+- Secrets only in environment variables. Do not expose stack traces in JSON responses (`docs/rules/workflow-api-endpoint.md`).
+
+## API response shape
+
+- Success: `{ "data": ... }`
+- Error: `{ "error": "message" }`
+
+## Explicit prohibitions
+
+- Business logic in UI or route handlers.
+- Prisma outside repositories.
+- Ignoring game/catalog context when rules require separation.
+- Duplicating logic or bypassing existing services.

@@ -1,0 +1,44 @@
+---
+description: DJN Store — Next.js App Router, UI, forms (docs/rules)
+globs:
+  - "**/app/**"
+  - "**/components/**"
+---
+
+## UI stack
+
+- Next.js App Router, React, TypeScript, Tailwind, **shadcn/ui**, React Hook Form + **Zod** (`docs/rules/architecture.md`, `docs/rules/workflow-frontend-component.md`).
+
+## Before implementing UI
+
+Read `feature.md` and `docs/rules/workflow-frontend-component.md`; align calls with `docs/rules/workflow-api-endpoint.md`.
+
+## UI vs business logic
+
+- **Pages**: routing, composition, API helper calls, loading/error state.
+- **Components**: mostly **present**ational; data via props; **no** business logic.
+- Do **not** encode business rules on the client; the API is the source of truth.
+
+## Forms
+
+- React Hook Form + Zod; validate before submit; clear field errors.
+
+## API on the client
+
+- Use `fetch` or small reusable helpers. Avoid scattering raw `fetch` inside purely presentational components; prefer page-level or dedicated helpers consistent with the project.
+
+## State
+
+- Local state for UI; avoid unnecessary global state; do not duplicate server data without reason.
+
+## Theme / UX
+
+- **Gamer Dark**, professional polish; fast navigation by game/filters (`docs/mhp/overview.md`).
+
+## Clerk
+
+- Clerk components/hooks; protect dashboard/admin routes; redirect unauthenticated users when required.
+
+## Prohibitions
+
+- `any`, hardcoded rules that belong on the backend, duplicated API logic, missing loading/error handling.
