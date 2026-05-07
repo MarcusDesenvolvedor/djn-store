@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { VaultHomeFaq } from "@/components/store/vault-home-faq";
+import { VaultStoreHeaderAuth } from "@/components/store/vault-store-header-auth";
 
 const GAME_CARDS = [
   {
@@ -93,12 +94,7 @@ export function VaultArpgHome() {
                 shopping_cart
               </span>
             </button>
-            <button
-              type="button"
-              className="micro-chamfer ml-4 scale-95 bg-on-surface px-6 py-2.5 font-button text-button text-surface transition-colors hover:bg-primary active:scale-95"
-            >
-              Entrar
-            </button>
+            <VaultStoreHeaderAuth />
           </div>
         </div>
       </header>

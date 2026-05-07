@@ -9,8 +9,9 @@
 ### Staff opens `/admin`
 
 1. **Not signed in (Clerk)** → redirect to `/sign-in`.
-2. **Signed in** → read primary e-mail from Clerk; **normalize** (trim, lowercase).
-3. **Allowlist** → if e-mail exists in `admin_allowed_emails` → render admin layout; else redirect to `/`.
+2. **Signed in** → evaluate access:
+   - If **`ADMIN_ACCESS_ALLOW_ALL=true`** (temporary diagnostics): **any** authenticated session may render the admin shell — **do not use in production**.
+   - Else: primary e-mail from Clerk **normalized** (trim, lowercase); must exist in `admin_allowed_emails`, otherwise redirect to `/`.
 
 ### Navigation
 
@@ -21,8 +22,9 @@
 
 ## Business rules
 
-- **Admin access** is granted only when the Clerk user’s **primary e-mail** matches a row in **`AdminAllowedEmail`** (`prisma/schema.prisma`).
-- Enabling an admin is done by **inserting** the normalized e-mail in the database (Prisma Studio, SQL, ou seed)—not via client-side checks alone.
+- **`ADMIN_ACCESS_ALLOW_ALL`** (`process.env`): when **`true`**, any authenticated Clerk session passes the admin gate (**debugging only**; leave **`false`** in production).
+- With **`ADMIN_ACCESS_ALLOW_ALL=false`** (default): **Admin access** requires the Clerk user’s **primary e-mail** (normalized) to exist in **`AdminAllowedEmail`** (`prisma/schema.prisma`).
+- Allowlist entries are created by **inserting** the normalized e-mail in the database (Prisma Studio, SQL, or seed)—never rely on client-side checks alone.
 
 ## Entities involved
 

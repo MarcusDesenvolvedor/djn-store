@@ -21,6 +21,7 @@ export default async function AdminLayout({
 
   const user = await currentUser();
   const email = user?.primaryEmailAddress?.emailAddress;
+  const openAdminAccess = process.env.ADMIN_ACCESS_ALLOW_ALL === "true";
   const allowed = await canUserAccessAdminPanel(email);
   if (!allowed) {
     redirect("/");
@@ -30,7 +31,7 @@ export default async function AdminLayout({
     <div className="flex min-h-screen bg-background">
       <AdminSidebar />
       <div className="flex min-h-0 flex-1 flex-col">
-        <AdminTopBar />
+        <AdminTopBar sessionEmail={email ?? null} openAdminAccess={openAdminAccess} />
         <main className="flex-1 overflow-auto px-margin-page py-8">{children}</main>
       </div>
     </div>
