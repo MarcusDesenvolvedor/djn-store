@@ -4,6 +4,8 @@
 
 Public **home page** for the ARPG virtual goods storefront: strong first impression, **Gamer Dark** aesthetic, fast orientation toward catalog browsing (`docs/mhp/overview.md`). No business rules on the client beyond navigation and static marketing copy.
 
+**Design source:** Stitch project *Nexus ARPG Storefront*, screen *Home - VAULT.ARPG* (`projects/14319505650371071443/screens/9501dc4562814be4b7d55dfee7248bd3`). UI aims for **visual parity** with the exported HTML (tokens, typography, sections, imagery URLs).
+
 ## Flows
 
 ### Visitor lands on `/`
@@ -28,6 +30,12 @@ Public **home page** for the ARPG virtual goods storefront: strong first impress
 
 - **Layers:** `src/app/page.tsx` composes storefront components; hero lives under `src/components/store/`.
 - Presentational components only; no catalog or pricing logic in UI.
+
+### FAQ (landing)
+
+- **Location:** Home (`/`), seção `#faq` após “Processo de Aquisição”.
+- **Behavior:** Acordeão por item (expandir/recolher ao clicar na pergunta); apenas estado de UI no cliente (`vault-home-faq.tsx`).
+- **Copy:** PT-BR; políticas finais de entrega/PSN ficam alinhadas ao checkout e ao suporte quando existirem.
 
 ## Dependencies
 
