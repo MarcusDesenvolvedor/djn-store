@@ -20,6 +20,14 @@ enum PaymentStatus {
   CONFIRMED
 }
 
+model AdminAllowedEmail {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+
+  @@map("admin_allowed_emails")
+}
+
 model User {
   id        String   @id @default(uuid())
   email     String   @unique
