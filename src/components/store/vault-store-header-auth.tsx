@@ -1,15 +1,19 @@
 "use client";
 
-import { SignedIn, SignedOut, UserButton, useUser } from "@clerk/nextjs";
+import { useAuth, UserButton, useUser } from "@clerk/nextjs";
 import Link from "next/link";
+
+function HeaderAuthSkeleton() {
+  return (
+    <span className="ml-3 inline-block h-9 w-9 shrink-0 rounded-full bg-surface-container-high ring-1 ring-outline-variant" />
+  );
+}
 
 function SignedInAccount() {
   const { user, isLoaded } = useUser();
 
   if (!isLoaded) {
-    return (
-      <span className="ml-3 inline-block h-9 w-9 shrink-0 rounded-full bg-surface-container-high ring-1 ring-outline-variant" />
-    );
+    return <HeaderAuthSkeleton />;
   }
 
   const email = user?.primaryEmailAddress?.emailAddress;
@@ -37,19 +41,22 @@ function SignedInAccount() {
 }
 
 export function VaultStoreHeaderAuth() {
-  return (
-    <>
-      <SignedOut>
-        <Link
-          href="/sign-in"
-          className="micro-chamfer ml-3 inline-flex scale-95 items-center justify-center bg-on-surface px-6 py-2.5 font-button text-button text-surface transition-colors hover:bg-primary active:scale-95"
-        >
-          Entrar
-        </Link>
-      </SignedOut>
-      <SignedIn>
-        <SignedInAccount />
-      </SignedIn>
-    </>
-  );
+  const { isLoaded, userId } = useAuth();
+
+  if (!isLoaded) {
+    return <HeaderAuthSkeleton />;
+  }
+
+  if (!userId) {
+    return (
+      <Link
+        href="/sign-in"
+        className="micro-chamfer ml-3 inline-flex scale-95 items-center justify-center bg-on-surface px-6 py-2.5 font-button text-button text-surface transition-colors hover:bg-primary active:scale-95"
+      >
+        Entrar
+      </Link>
+    );
+  }
+
+  return <SignedInAccount />;
 }
