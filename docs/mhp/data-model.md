@@ -251,6 +251,7 @@ Represents payment state for an order (exact method per `business-logic.md`; not
 - id (UUID)
 - orderId
 - status (e.g. PENDING | CONFIRMED, per implementation)
+- method (optional string label, e.g. PIX / card — when checkout captures it)
 - createdAt
 - confirmedAt?
 
