@@ -69,7 +69,7 @@ export default function AdminDashboardPage() {
               <span className="material-symbols-outlined text-[18px] text-primary" aria-hidden>
                 chevron_right
               </span>
-              Cadastro em massa de SKUs por importação (planejado).
+              Cadastro em massa de produtos por importação (planejado).
             </li>
             <li className="flex items-center gap-2">
               <span className="material-symbols-outlined text-[18px] text-primary" aria-hidden>

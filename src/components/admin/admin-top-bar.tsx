@@ -4,9 +4,9 @@ import { UserButton } from "@clerk/nextjs";
 import { usePathname } from "next/navigation";
 
 const ROUTE_TITLES: { prefix: string; title: string; description: string }[] = [
-  { prefix: "/admin/produtos/novo", title: "Novo produto", description: "Cadastro com SKU, jogo e categoria validados na API." },
+  { prefix: "/admin/produtos/novo", title: "Novo produto", description: "Cadastro com categoria (define o jogo) e ID gerado em sequência." },
   { prefix: "/admin/produtos", title: "Produtos", description: "Catálogo, estoque e preços por jogo." },
-  { prefix: "/admin/categorias", title: "Categorias", description: "Árvore de categorias por título ARPG." },
+  { prefix: "/admin/categorias", title: "Categorias", description: "Cadastro por nome e lista do catálogo admin." },
   {
     prefix: "/admin/configuracoes",
     title: "Configurações",

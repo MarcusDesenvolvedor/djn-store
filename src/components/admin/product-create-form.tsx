@@ -4,42 +4,33 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useFieldArray, useForm } from "react-hook-form";
 import {
   createAdminProductBodySchema,
-  type CreateAdminProductBody,
+  type CreateAdminProductFormValues,
 } from "@/features/product-admin/product-admin.schema";
 import type { Resolver } from "react-hook-form";
-
-export type ProductCreateGameOption = {
-  id: string;
-  name: string;
-};
 
 type CategoryOption = {
   id: string;
   name: string;
 };
 
-export function ProductCreateForm({ games }: { games: ProductCreateGameOption[] }) {
+export function ProductCreateForm() {
   const router = useRouter();
   const [categories, setCategories] = useState<CategoryOption[]>([]);
-  const [loadingCats, setLoadingCats] = useState(false);
+  const [loadingCats, setLoadingCats] = useState(true);
   const [categoriesError, setCategoriesError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const {
     register,
     handleSubmit,
-    watch,
-    setValue,
     control,
     formState: { errors, isSubmitting },
-  } = useForm<CreateAdminProductBody>({
-    resolver: zodResolver(createAdminProductBodySchema) as Resolver<CreateAdminProductBody>,
+  } = useForm<CreateAdminProductFormValues>({
+    resolver: zodResolver(createAdminProductBodySchema) as unknown as Resolver<CreateAdminProductFormValues>,
     defaultValues: {
-      sku: "",
-      gameId: "",
       categoryId: "",
       name: "",
       description: "",
@@ -47,26 +38,26 @@ export function ProductCreateForm({ games }: { games: ProductCreateGameOption[] 
       stock: 0,
       brand: null,
       isActive: true,
+      imageUrls: [],
     },
   });
 
-  const gameId = watch("gameId");
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "imageUrls",
+  });
 
   useEffect(() => {
-    if (!gameId) {
-      setCategories([]);
-      setCategoriesError(null);
-      setValue("categoryId", "");
-      return;
-    }
-
     let cancelled = false;
     setLoadingCats(true);
     setCategoriesError(null);
 
-    void fetch(`/api/admin/categories?gameId=${encodeURIComponent(gameId)}`)
+    void fetch("/api/admin/categories")
       .then(async (res) => {
-        const body = (await res.json()) as { data?: CategoryOption[]; error?: string };
+        const body = (await res.json()) as {
+          data?: { id: string; name: string; createdAt?: string }[];
+          error?: string;
+        };
         if (!res.ok) {
           throw new Error(body.error ?? "Erro ao carregar categorias");
         }
@@ -85,12 +76,10 @@ export function ProductCreateForm({ games }: { games: ProductCreateGameOption[] 
         }
       });
 
-    setValue("categoryId", "");
-
     return () => {
       cancelled = true;
     };
-  }, [gameId, setValue]);
+  }, []);
 
   const onSubmit = handleSubmit(async (values) => {
     setSubmitError(null);
@@ -108,7 +97,7 @@ export function ProductCreateForm({ games }: { games: ProductCreateGameOption[] 
     router.refresh();
   });
 
-  const categoryDisabled = !gameId || loadingCats || categories.length === 0;
+  const categoryDisabled = loadingCats || categories.length === 0;
 
   return (
     <form
@@ -120,7 +109,8 @@ export function ProductCreateForm({ games }: { games: ProductCreateGameOption[] 
         <div>
           <h2 className="font-h3 text-h3 text-on-surface">Novo produto</h2>
           <p className="mt-1 font-body-sm text-body-sm text-on-surface-variant">
-            SKU único por linha de catálogo; categoria sempre do mesmo jogo selecionado.
+            O ID numérico do produto (1, 2, 3…) é gerado automaticamente ao salvar. Você pode anexar várias imagens por URL
+            (ordem da lista = ordem de exibição sugerida). Associe uma categoria cadastrada na área de categorias.
           </p>
         </div>
         <Link
@@ -139,52 +129,11 @@ export function ProductCreateForm({ games }: { games: ProductCreateGameOption[] 
 
       <div className="grid gap-6 md:grid-cols-2">
         <div className="space-y-2 md:col-span-2">
-          <label htmlFor="sku" className="font-meta-mono text-meta-mono uppercase tracking-widest text-on-surface-variant">
-            SKU
-          </label>
-          <input
-            id="sku"
-            {...register("sku")}
-            autoComplete="off"
-            placeholder="Ex.: D4-GOLD-001"
-            className="w-full rounded border border-outline-variant bg-background px-3 py-2 font-body text-body text-on-surface outline-none ring-primary focus:border-transparent focus:ring-1"
-          />
-          {errors.sku ? (
-            <p className="font-body-sm text-body-sm text-error">{errors.sku.message}</p>
-          ) : (
-            <p className="font-body-sm text-body-sm text-on-surface-variant">
-              Armazenado em maiúsculas; não pode repetir em outro produto.
-            </p>
-          )}
-        </div>
-
-        <div className="space-y-2">
-          <label htmlFor="gameId" className="font-meta-mono text-meta-mono uppercase tracking-widest text-on-surface-variant">
-            Jogo
-          </label>
-          <select
-            id="gameId"
-            {...register("gameId")}
-            className="w-full rounded border border-outline-variant bg-background px-3 py-2 font-body text-body text-on-surface outline-none ring-primary focus:border-transparent focus:ring-1"
-          >
-            <option value="">Selecione o jogo</option>
-            {games.map((g) => (
-              <option key={g.id} value={g.id}>
-                {g.name}
-              </option>
-            ))}
-          </select>
-          {errors.gameId ? (
-            <p className="font-body-sm text-body-sm text-error">{errors.gameId.message}</p>
-          ) : null}
-        </div>
-
-        <div className="space-y-2">
           <label
             htmlFor="categoryId"
             className="font-meta-mono text-meta-mono uppercase tracking-widest text-on-surface-variant"
           >
-            Categoria
+            Categoria <span className="text-error">*</span>
           </label>
           <select
             id="categoryId"
@@ -192,7 +141,7 @@ export function ProductCreateForm({ games }: { games: ProductCreateGameOption[] 
             disabled={categoryDisabled}
             className="w-full rounded border border-outline-variant bg-background px-3 py-2 font-body text-body text-on-surface outline-none ring-primary focus:border-transparent focus:ring-1 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <option value="">{loadingCats ? "Carregando…" : "Selecione a categoria"}</option>
+            <option value="">{loadingCats ? "Carregando categorias…" : "Selecione a categoria"}</option>
             {categories.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}
@@ -205,9 +154,9 @@ export function ProductCreateForm({ games }: { games: ProductCreateGameOption[] 
           {errors.categoryId ? (
             <p className="font-body-sm text-body-sm text-error">{errors.categoryId.message}</p>
           ) : null}
-          {gameId && !loadingCats && categories.length === 0 && !categoriesError ? (
+          {!loadingCats && categories.length === 0 && !categoriesError ? (
             <p className="font-body-sm text-body-sm text-on-surface-variant">
-              Nenhuma categoria para este jogo no banco — crie categorias antes (Prisma / seed).
+              Nenhuma categoria cadastrada — crie ao menos uma em Categorias antes de adicionar produtos.
             </p>
           ) : null}
         </div>
@@ -240,6 +189,66 @@ export function ProductCreateForm({ games }: { games: ProductCreateGameOption[] 
           {errors.description ? (
             <p className="font-body-sm text-body-sm text-error">{errors.description.message}</p>
           ) : null}
+        </div>
+
+        <div className="space-y-2 md:col-span-2">
+          <div className="flex flex-wrap items-end justify-between gap-2">
+            <span className="font-meta-mono text-meta-mono uppercase tracking-widest text-on-surface-variant">
+              Imagens do produto (URLs)
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                append({ url: "" });
+              }}
+              className="inline-flex items-center gap-1.5 rounded border border-outline-variant px-3 py-1.5 font-body-sm text-body-sm text-on-surface-variant transition-colors hover:border-primary hover:text-on-surface"
+            >
+              <span className="material-symbols-outlined text-[18px]" aria-hidden>
+                add_photo_alternate
+              </span>
+              Adicionar imagem
+            </button>
+          </div>
+          <p className="font-body-sm text-body-sm text-on-surface-variant">
+            Opcional. Até 32 URLs http(s). Linhas em branco são ignoradas ao salvar.
+          </p>
+          {errors.imageUrls ? (
+            <p className="font-body-sm text-body-sm text-error">
+              {typeof errors.imageUrls.message === "string"
+                ? errors.imageUrls.message
+                : "Verifique as URLs das imagens."}
+            </p>
+          ) : null}
+          <div className="space-y-2">
+            {fields.length === 0 ? (
+              <p className="rounded border border-dashed border-outline-variant bg-background/50 px-4 py-3 font-body-sm text-body-sm text-on-surface-variant">
+                Nenhuma imagem — use &quot;Adicionar imagem&quot; para incluir links (ex.: CDN ou armazenamento público).
+              </p>
+            ) : (
+              fields.map((field, index) => (
+                <div key={field.id} className="flex gap-2">
+                  <input
+                    type="text"
+                    autoComplete="off"
+                    placeholder="https://…"
+                    aria-label={`URL da imagem ${index + 1}`}
+                    {...register(`imageUrls.${index}.url` as const)}
+                    className="min-w-0 flex-1 rounded border border-outline-variant bg-background px-3 py-2 font-body text-body text-on-surface outline-none ring-primary focus:border-transparent focus:ring-1"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      remove(index);
+                    }}
+                    className="shrink-0 rounded border border-outline-variant px-3 py-2 font-meta-mono text-meta-mono uppercase tracking-wider text-on-surface-variant transition-colors hover:border-error hover:text-error"
+                    aria-label={`Remover imagem ${index + 1}`}
+                  >
+                    Remover
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
         </div>
 
         <div className="space-y-2">

@@ -1,9 +1,8 @@
 import { Prisma } from "@prisma/client";
 import type { CreateAdminProductBody } from "./product-admin.schema";
 import {
-  findCategoryBelongsToGame,
-  findCategoriesForGameAdmin,
-  findGameExists,
+  deleteAdminProductById,
+  findCategoryExists,
   insertProduct,
   findProductsForAdminList,
   type ProductAdminListRow,
@@ -13,23 +12,16 @@ export type { ProductAdminListRow };
 
 export type CreateAdminProductResult =
   | { ok: true; product: ProductAdminListRow }
-  | { ok: false; error: "GAME_NOT_FOUND" | "CATEGORY_INVALID" | "SKU_ALREADY_EXISTS" | "UNKNOWN" };
+  | { ok: false; error: "CATEGORY_NOT_FOUND" | "UNKNOWN" };
 
 export async function createAdminProduct(body: CreateAdminProductBody): Promise<CreateAdminProductResult> {
-  const gameOk = await findGameExists(body.gameId);
-  if (!gameOk) {
-    return { ok: false, error: "GAME_NOT_FOUND" };
-  }
-
-  const categoryOk = await findCategoryBelongsToGame(body.categoryId, body.gameId);
+  const categoryOk = await findCategoryExists(body.categoryId);
   if (!categoryOk) {
-    return { ok: false, error: "CATEGORY_INVALID" };
+    return { ok: false, error: "CATEGORY_NOT_FOUND" };
   }
 
   try {
     const product = await insertProduct({
-      sku: body.sku.trim().toUpperCase(),
-      gameId: body.gameId,
       categoryId: body.categoryId,
       name: body.name,
       description: body.description,
@@ -37,12 +29,10 @@ export async function createAdminProduct(body: CreateAdminProductBody): Promise<
       stock: body.stock,
       brand: body.brand,
       isActive: body.isActive,
+      imageUrls: body.imageUrls,
     });
     return { ok: true, product };
-  } catch (error: unknown) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
-      return { ok: false, error: "SKU_ALREADY_EXISTS" };
-    }
+  } catch {
     return { ok: false, error: "UNKNOWN" };
   }
 }
@@ -51,15 +41,22 @@ export async function listAdminProducts(limit = 100): Promise<ProductAdminListRo
   return findProductsForAdminList(limit);
 }
 
-export type ListAdminCategoriesResult =
-  | { ok: true; categories: Awaited<ReturnType<typeof findCategoriesForGameAdmin>> }
-  | { ok: false; error: "GAME_NOT_FOUND" };
+export type DeleteAdminProductResult =
+  | { ok: true }
+  | { ok: false; error: "NOT_FOUND" | "HAS_ORDERS" | "UNKNOWN" };
 
-export async function listAdminCategoriesByGame(gameId: string): Promise<ListAdminCategoriesResult> {
-  const gameOk = await findGameExists(gameId);
-  if (!gameOk) {
-    return { ok: false, error: "GAME_NOT_FOUND" };
+export async function deleteAdminProduct(productId: number): Promise<DeleteAdminProductResult> {
+  try {
+    const result = await deleteAdminProductById(productId);
+    if (result === "NOT_FOUND") {
+      return { ok: false, error: "NOT_FOUND" };
+    }
+    if (result === "HAS_ORDERS") {
+      return { ok: false, error: "HAS_ORDERS" };
+    }
+    return { ok: true };
+  } catch (error: unknown) {
+    console.error("[product-admin] deleteAdminProduct failed", error);
+    return { ok: false, error: "UNKNOWN" };
   }
-  const categories = await findCategoriesForGameAdmin(gameId);
-  return { ok: true, categories };
 }

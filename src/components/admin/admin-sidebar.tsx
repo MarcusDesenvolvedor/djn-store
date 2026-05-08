@@ -21,7 +21,7 @@ export function AdminSidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="flex w-[260px] shrink-0 flex-col border-r border-outline-variant bg-surface-container-lowest">
+    <aside className="flex h-full w-[260px] shrink-0 flex-col border-r border-outline-variant bg-surface-container-lowest">
       <div className="border-b border-outline-variant px-6 py-6">
         <Link
           href="/admin"

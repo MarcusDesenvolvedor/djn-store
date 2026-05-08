@@ -2,46 +2,26 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
 export type ProductAdminListRow = {
-  id: string;
-  sku: string;
+  id: number;
   name: string;
   price: Prisma.Decimal;
   stock: number;
   isActive: boolean;
   updatedAt: Date;
-  gameName: string;
   categoryName: string;
+  orderItemCount: number;
+  imageCount: number;
 };
 
-export async function findCategoriesForGameAdmin(gameId: string): Promise<
-  { id: string; name: string; createdAt: Date }[]
-> {
-  return prisma.category.findMany({
-    where: { gameId },
-    select: { id: true, name: true, createdAt: true },
-    orderBy: { name: "asc" },
-  });
-}
-
-export async function findGameExists(gameId: string): Promise<boolean> {
-  const row = await prisma.game.findUnique({
-    where: { id: gameId },
-    select: { id: true },
-  });
-  return row !== null;
-}
-
-export async function findCategoryBelongsToGame(categoryId: string, gameId: string): Promise<boolean> {
-  const row = await prisma.category.findFirst({
-    where: { id: categoryId, gameId },
+export async function findCategoryExists(categoryId: string): Promise<boolean> {
+  const row = await prisma.category.findUnique({
+    where: { id: categoryId },
     select: { id: true },
   });
   return row !== null;
 }
 
 export async function insertProduct(input: {
-  sku: string;
-  gameId: string;
   categoryId: string;
   name: string;
   description: string;
@@ -49,11 +29,10 @@ export async function insertProduct(input: {
   stock: number;
   brand: string | null;
   isActive: boolean;
+  imageUrls: string[];
 }): Promise<ProductAdminListRow> {
   const row = await prisma.product.create({
     data: {
-      sku: input.sku,
-      gameId: input.gameId,
       categoryId: input.categoryId,
       name: input.name,
       description: input.description,
@@ -61,30 +40,36 @@ export async function insertProduct(input: {
       stock: input.stock,
       brand: input.brand,
       isActive: input.isActive,
+      ...(input.imageUrls.length > 0
+        ? {
+            images: {
+              create: input.imageUrls.map((url) => ({ url })),
+            },
+          }
+        : {}),
     },
     select: {
       id: true,
-      sku: true,
       name: true,
       price: true,
       stock: true,
       isActive: true,
       updatedAt: true,
-      game: { select: { name: true } },
       category: { select: { name: true } },
+      _count: { select: { orderItems: true, images: true } },
     },
   });
 
   return {
     id: row.id,
-    sku: row.sku,
     name: row.name,
     price: row.price,
     stock: row.stock,
     isActive: row.isActive,
     updatedAt: row.updatedAt,
-    gameName: row.game.name,
     categoryName: row.category.name,
+    orderItemCount: row._count.orderItems,
+    imageCount: row._count.images,
   };
 }
 
@@ -94,26 +79,48 @@ export async function findProductsForAdminList(limit: number): Promise<ProductAd
     orderBy: { updatedAt: "desc" },
     select: {
       id: true,
-      sku: true,
       name: true,
       price: true,
       stock: true,
       isActive: true,
       updatedAt: true,
-      game: { select: { name: true } },
       category: { select: { name: true } },
+      _count: { select: { orderItems: true, images: true } },
     },
   });
 
   return rows.map((row) => ({
     id: row.id,
-    sku: row.sku,
     name: row.name,
     price: row.price,
     stock: row.stock,
     isActive: row.isActive,
     updatedAt: row.updatedAt,
-    gameName: row.game.name,
     categoryName: row.category.name,
+    orderItemCount: row._count.orderItems,
+    imageCount: row._count.images,
   }));
+}
+
+export async function deleteAdminProductById(
+  productId: number,
+): Promise<"DELETED" | "NOT_FOUND" | "HAS_ORDERS"> {
+  const product = await prisma.product.findUnique({
+    where: { id: productId },
+    select: {
+      id: true,
+      _count: { select: { orderItems: true } },
+    },
+  });
+  if (!product) {
+    return "NOT_FOUND";
+  }
+  if (product._count.orderItems > 0) {
+    return "HAS_ORDERS";
+  }
+  await prisma.$transaction([
+    prisma.productImage.deleteMany({ where: { productId } }),
+    prisma.product.delete({ where: { id: productId } }),
+  ]);
+  return "DELETED";
 }

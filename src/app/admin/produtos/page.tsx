@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ProductDeleteButton } from "@/components/admin/product-delete-button";
 import { listAdminProducts } from "@/features/product-admin/product-admin.service";
 
 export default async function AdminProdutosPage() {
@@ -10,7 +11,7 @@ export default async function AdminProdutosPage() {
         <div>
           <h2 className="font-h2 text-h2 text-on-surface">Produtos</h2>
           <p className="mt-2 font-body-sm text-body-sm text-on-surface-variant">
-            Catálogo administrativo — preço e estoque por SKU.
+            Catálogo administrativo — preço e estoque por produto.
           </p>
         </div>
         <Link
@@ -39,27 +40,28 @@ export default async function AdminProdutosPage() {
         </div>
       ) : (
         <div className="overflow-x-auto rounded border border-outline-variant">
-          <table className="w-full min-w-[720px] border-collapse text-left font-body-sm text-body-sm">
+          <table className="w-full min-w-[880px] border-collapse text-left font-body-sm text-body-sm">
             <thead>
               <tr className="border-b border-outline-variant bg-surface-container-lowest font-meta-mono text-meta-mono uppercase tracking-widest text-on-surface-variant">
-                <th className="px-4 py-3">SKU</th>
+                <th className="px-4 py-3">ID</th>
                 <th className="px-4 py-3">Nome</th>
-                <th className="px-4 py-3">Jogo</th>
                 <th className="px-4 py-3">Categoria</th>
+                <th className="px-4 py-3 text-center">Imagens</th>
                 <th className="px-4 py-3 text-right">Preço</th>
                 <th className="px-4 py-3 text-right">Estoque</th>
                 <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3 text-right">Ações</th>
               </tr>
             </thead>
             <tbody>
               {products.map((row) => (
                 <tr key={row.id} className="border-b border-outline-variant/80 bg-background/40 text-on-surface last:border-b-0">
-                  <td className="px-4 py-3 font-medium">{row.sku}</td>
+                  <td className="px-4 py-3 font-medium tabular-nums">{row.id}</td>
                   <td className="max-w-[220px] truncate px-4 py-3" title={row.name}>
                     {row.name}
                   </td>
-                  <td className="px-4 py-3 text-on-surface-variant">{row.gameName}</td>
                   <td className="px-4 py-3 text-on-surface-variant">{row.categoryName}</td>
+                  <td className="px-4 py-3 text-center tabular-nums text-on-surface-variant">{row.imageCount}</td>
                   <td className="px-4 py-3 text-right tabular-nums">{row.price.toString()}</td>
                   <td className="px-4 py-3 text-right tabular-nums">{row.stock}</td>
                   <td className="px-4 py-3">
@@ -72,6 +74,13 @@ export default async function AdminProdutosPage() {
                     >
                       {row.isActive ? "Ativo" : "Inativo"}
                     </span>
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <ProductDeleteButton
+                      productId={row.id}
+                      productName={row.name}
+                      orderItemCount={row.orderItemCount}
+                    />
                   </td>
                 </tr>
               ))}
