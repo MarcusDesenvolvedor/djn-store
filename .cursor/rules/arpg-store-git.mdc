@@ -1,7 +1,6 @@
 ---
-description: Git and commit conventions for DJN Store
-globs:
-  - "**/*"
+description: Git, commits, and always push to remote for DJN Store
+alwaysApply: true
 ---
 
 ## Git workflow
@@ -11,6 +10,14 @@ globs:
 - Before committing: run lint/format as required by the project; review `git diff`.
 - Never commit secrets, `.env*`, credentials, or generated artifacts covered by `.gitignore`.
 - Prefer small, logical commits; split unrelated changes.
+
+## Push after commit (mandatory for the agent)
+
+Whenever you create a commit for the user, **immediately push to the remote** in the same workflow:
+
+1. Run `git push`. If the current branch has no upstream, use `git push -u origin <current-branch>` (read the branch name from `git branch --show-current` or status output).
+2. If the push fails (auth, permissions, network, rejected history), **report the error clearly** and stop; do not assume the remote was updated.
+3. Do not end the task with only a local commit unless the user explicitly asked to commit without pushing.
 
 ## Commit messages (Conventional Commits)
 

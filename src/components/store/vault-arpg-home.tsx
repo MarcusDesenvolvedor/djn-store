@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { VaultHomeFaq } from "@/components/store/vault-home-faq";
 import { VaultStoreHeaderAuth } from "@/components/store/vault-store-header-auth";
 
@@ -41,12 +42,13 @@ export function VaultArpgHome() {
       <header className="sticky top-0 z-50 border-b border-outline-variant bg-surface dark:bg-surface">
         <div className="mx-auto flex h-16 w-full max-w-container-max items-center justify-between px-margin-page">
           <div className="flex items-center gap-gutter">
-            <a
+            <Link
               className="font-h3 text-h3 font-bold tracking-tighter text-on-surface dark:text-on-surface"
-              href="#"
+              href="/"
+              prefetch={false}
             >
               DJN STORE
-            </a>
+            </Link>
             <div className="hidden items-center rounded border border-outline-variant bg-surface-container-lowest px-3 py-1.5 text-on-surface-variant transition-colors focus-within:border-primary md:flex">
               <span className="material-symbols-outlined mr-2 text-[18px]">search</span>
               <input
@@ -61,25 +63,25 @@ export function VaultArpgHome() {
           <nav className="hidden items-center gap-gutter lg:flex">
             <a
               className="font-body-sm text-body-sm text-on-surface-variant transition-colors duration-200 hover:text-primary dark:text-on-surface-variant"
-              href="#"
+              href="#jogos"
             >
               Diablo IV
             </a>
             <a
               className="font-body-sm text-body-sm text-on-surface-variant transition-colors duration-200 hover:text-primary dark:text-on-surface-variant"
-              href="#"
+              href="#jogos"
             >
               PoE 2
             </a>
             <a
               className="font-body-sm text-body-sm text-on-surface-variant transition-colors duration-200 hover:text-primary dark:text-on-surface-variant"
-              href="#"
+              href="#jogos"
             >
               Last Epoch
             </a>
             <a
               className="font-body-sm text-body-sm text-on-surface-variant transition-colors duration-200 hover:text-primary dark:text-on-surface-variant"
-              href="#"
+              href="#jogos"
             >
               Hero Siege
             </a>
@@ -144,7 +146,7 @@ export function VaultArpgHome() {
             </div>
             <a
               className="flex items-center gap-1 font-meta-mono text-meta-mono uppercase text-primary transition-colors hover:text-on-surface"
-              href="#"
+              href="#jogos"
             >
               Ver todos{" "}
               <span className="material-symbols-outlined text-[14px]">chevron_right</span>
@@ -155,7 +157,7 @@ export function VaultArpgHome() {
               <a
                 key={game.title}
                 className="group relative flex flex-col overflow-hidden rounded border border-outline-variant bg-surface-container-lowest transition-colors duration-300 hover:border-on-surface-variant"
-                href="#"
+                href="#jogos"
               >
                 <div className="relative h-48 w-full overflow-hidden bg-surface-container">
                   <Image

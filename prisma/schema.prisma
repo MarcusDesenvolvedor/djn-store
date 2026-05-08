@@ -117,6 +117,7 @@ model Payment {
   id          String        @id @default(uuid())
   orderId     String        @unique
   status      PaymentStatus @default(PENDING)
+  method      String?
   createdAt   DateTime      @default(now())
   confirmedAt DateTime?
 

@@ -2,6 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { describeUnknownError } from "@/lib/error-message";
+import { refreshClientRouter } from "@/lib/safe-router-refresh";
 
 export type ProductDeleteButtonProps = {
   productId: number;
@@ -26,14 +28,24 @@ export function ProductDeleteButton({ productId, productName, orderItemCount }: 
     }
     setPending(true);
     setError(null);
-    const res = await fetch(`/api/admin/products/${encodeURIComponent(String(productId))}`, { method: "DELETE" });
-    const body = (await res.json()) as { error?: string };
-    setPending(false);
-    if (!res.ok) {
-      setError(body.error ?? "Não foi possível excluir");
-      return;
+    try {
+      const res = await fetch(`/api/admin/products/${encodeURIComponent(String(productId))}`, { method: "DELETE" });
+      let body: { error?: string } = {};
+      try {
+        body = (await res.json()) as { error?: string };
+      } catch {
+        body = {};
+      }
+      setPending(false);
+      if (!res.ok) {
+        setError(body.error ?? "Não foi possível excluir");
+        return;
+      }
+      refreshClientRouter(router);
+    } catch (err: unknown) {
+      setPending(false);
+      setError(describeUnknownError(err));
     }
-    router.refresh();
   }
 
   return (
@@ -41,7 +53,10 @@ export function ProductDeleteButton({ productId, productName, orderItemCount }: 
       <button
         type="button"
         onClick={() => {
-          void handleDelete();
+          void handleDelete().catch((reason: unknown) => {
+            setPending(false);
+            setError(describeUnknownError(reason));
+          });
         }}
         disabled={blocked || pending}
         title={

@@ -4,13 +4,14 @@ import { UserButton } from "@clerk/nextjs";
 import { usePathname } from "next/navigation";
 
 const ROUTE_TITLES: { prefix: string; title: string; description: string }[] = [
-  { prefix: "/admin/produtos/novo", title: "Novo produto", description: "Cadastro com categoria (define o jogo) e ID gerado em sequência." },
-  { prefix: "/admin/produtos", title: "Produtos", description: "Catálogo, estoque e preços por jogo." },
-  { prefix: "/admin/categorias", title: "Categorias", description: "Cadastro por nome e lista do catálogo admin." },
+  { prefix: "/admin/produtos/novo", title: "Novo produto", description: "Cadastro com categoria e ID gerado pelo banco." },
+  { prefix: "/admin/produtos", title: "Produtos", description: "Lista ao vivo do catálogo (preço, estoque, status)." },
+  { prefix: "/admin/categorias", title: "Categorias", description: "Lista ao vivo; contagens por categoria vindas do banco." },
+  { prefix: "/admin/pedidos", title: "Pedidos", description: "Pedidos ao vivo com cliente, itens e pagamento." },
   {
     prefix: "/admin/configuracoes",
     title: "Configurações",
-    description: "Preferências operacionais da loja.",
+    description: "Resumo operacional dinâmico; preferências persistidas quando existirem no modelo.",
   },
 ];
 
@@ -18,7 +19,7 @@ function getHeading(pathname: string): { title: string; description: string } {
   if (pathname === "/admin") {
     return {
       title: "Dashboard",
-      description: "Resumo rápido da operação — métricas e atalhos em breve.",
+      description: "Métricas e listas atualizadas a partir da base em cada carregamento.",
     };
   }
   const hit = ROUTE_TITLES.find((r) => pathname.startsWith(r.prefix));

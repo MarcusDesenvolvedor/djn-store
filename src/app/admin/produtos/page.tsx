@@ -50,7 +50,7 @@ export default async function AdminProdutosPage() {
                 <th className="px-4 py-3 text-right">Preço</th>
                 <th className="px-4 py-3 text-right">Estoque</th>
                 <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3 text-right">Ações</th>
+                <th className="px-4 py-3 text-right">Loja / ações</th>
               </tr>
             </thead>
             <tbody>
@@ -76,11 +76,25 @@ export default async function AdminProdutosPage() {
                     </span>
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <ProductDeleteButton
-                      productId={row.id}
-                      productName={row.name}
-                      orderItemCount={row.orderItemCount}
-                    />
+                    <div className="flex flex-wrap items-center justify-end gap-2">
+                      <Link
+                        href={`/produtos/${row.id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 rounded border border-outline-variant px-2 py-1 font-meta-mono text-meta-mono text-primary transition-colors hover:bg-surface-container"
+                        title="Abre como o cliente vê na loja (estado atual: ativo, estoque e preço)"
+                      >
+                        <span className="material-symbols-outlined text-[16px]" aria-hidden>
+                          storefront
+                        </span>
+                        Ver na loja
+                      </Link>
+                      <ProductDeleteButton
+                        productId={row.id}
+                        productName={row.name}
+                        orderItemCount={row.orderItemCount}
+                      />
+                    </div>
                   </td>
                 </tr>
               ))}

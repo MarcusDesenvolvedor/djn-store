@@ -10,6 +10,8 @@ import {
   type CreateAdminProductFormValues,
 } from "@/features/product-admin/product-admin.schema";
 import type { Resolver } from "react-hook-form";
+import { describeUnknownError } from "@/lib/error-message";
+import { refreshClientRouter } from "@/lib/safe-router-refresh";
 
 type CategoryOption = {
   id: string;
@@ -67,7 +69,7 @@ export function ProductCreateForm() {
       })
       .catch((error: unknown) => {
         if (!cancelled) {
-          setCategoriesError(error instanceof Error ? error.message : "Erro ao carregar categorias");
+          setCategoriesError(describeUnknownError(error));
         }
       })
       .finally(() => {
@@ -81,27 +83,44 @@ export function ProductCreateForm() {
     };
   }, []);
 
-  const onSubmit = handleSubmit(async (values) => {
+  const onValidatedSubmit = handleSubmit(async (values) => {
     setSubmitError(null);
-    const res = await fetch("/api/admin/products", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(values),
-    });
-    const body = (await res.json()) as { error?: string };
-    if (!res.ok) {
-      setSubmitError(body.error ?? "Não foi possível criar o produto");
-      return;
+    try {
+      const res = await fetch("/api/admin/products", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(values),
+      });
+      let body: { error?: string } = {};
+      try {
+        body = (await res.json()) as { error?: string };
+      } catch {
+        body = {};
+      }
+      if (!res.ok) {
+        setSubmitError(body.error ?? "Não foi possível criar o produto");
+        return;
+      }
+      void Promise.resolve(router.push("/admin/produtos")).catch(() => undefined);
+      refreshClientRouter(router);
+    } catch (err: unknown) {
+      setSubmitError(describeUnknownError(err));
     }
-    router.push("/admin/produtos");
-    router.refresh();
   });
 
   const categoryDisabled = loadingCats || categories.length === 0;
 
   return (
     <form
-      onSubmit={onSubmit}
+      onSubmit={(e) => {
+        try {
+          void Promise.resolve(onValidatedSubmit(e)).catch((reason: unknown) => {
+            setSubmitError(describeUnknownError(reason));
+          });
+        } catch (reason: unknown) {
+          setSubmitError(describeUnknownError(reason));
+        }
+      }}
       className="space-y-8 rounded border border-outline-variant bg-surface-container-lowest p-6 md:p-8"
       noValidate
     >

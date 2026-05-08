@@ -15,10 +15,11 @@
 
 ### Navigation
 
-- `/admin` — Dashboard (overview placeholders).
-- `/admin/produtos` — Produtos.
-- `/admin/categorias` — Categorias.
-- `/admin/configuracoes` — Configurações.
+- `/admin` — Dashboard com **métricas dinâmicas** (PostgreSQL via `admin-dashboard` feature — pedidos/receita 24h, produtos, estoque baixo, atalhos com totais).
+- `/admin/produtos` — Produtos (lista do banco).
+- `/admin/categorias` — Categorias (lista do banco).
+- `/admin/pedidos` — Pedidos (listagem e detalhe do banco).
+- `/admin/configuracoes` — Configurações; bloco **resumo da operação** também dinâmico até existirem preferências persistidas.
 
 ## Business rules
 
@@ -46,8 +47,8 @@
 
 ## Out of scope (current slice)
 
-- CRUD produtos/categorias/pedidos reais.
-- APIs admin e mutations na allowlist pela UI.
+- CRUD produtos/categorias além do já entregue; mutações na allowlist pela UI.
+- Checkout e criação de pedidos pelo fluxo público (quando existirem, alimentarão `/admin/pedidos`).
 
-**Status:** Active (shell + allowlist)  
-**Version:** 1.0
+**Status:** Active (shell + allowlist + dashboard métricas dinâmicas)  
+**Version:** 1.1

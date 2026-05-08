@@ -13,6 +13,12 @@ Expose **read-only catalog context** for supported ARPG titles: list games (cata
 - **Response:** `{ "data": GameListItem[] }` with `id`, `name`, `slug`, `createdAt`, `updatedAt`.
 - **Errors:** `{ "error": string }` with `500` on unexpected failure (no stack traces in JSON).
 
+### Public: product page (read-only)
+
+- **Route:** `/produtos/[productId]` (App Router, servidor).
+- **Auth:** Public.
+- **Behavior:** Exibe um produto pelo ID numérico (preço, estoque, ativo/inativo, imagens, descrição), alinhado ao estado atual do cadastro — para preview a partir do admin e futura vitrine.
+
 ## Business rules
 
 - Games are the **root** of catalog segmentation (`docs/mhp/data-model.md` Game aggregate).
@@ -31,8 +37,8 @@ Expose **read-only catalog context** for supported ARPG titles: list games (cata
 
 ## Out of scope (current slice)
 
-- Storefront UI, filters, product listing, admin writes.
-- Cart, checkout, orders.
+- Storefront home shell (hero) only; filtros e listagem completa de produtos na home.
+- Cart, checkout, pedidos no fluxo público.
 
-**Status:** Active (API slice: list games)  
-**Version:** 1.0
+**Status:** Active (list games API + página pública de produto por ID)  
+**Version:** 1.1

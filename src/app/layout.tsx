@@ -30,7 +30,7 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider>
-      <html lang="pt-BR" className="dark">
+      <html lang="pt-BR" className="dark" suppressHydrationWarning>
         <head>
           {/* Stitch export uses Material Symbols; not covered by next/font */}
           {/* eslint-disable-next-line @next/next/no-page-custom-font -- Material Symbols stylesheet */}
@@ -40,6 +40,7 @@ export default function RootLayout({
           />
         </head>
         <body
+          suppressHydrationWarning
           className={`${inter.variable} ${spaceGrotesk.variable} flex min-h-screen flex-col bg-background font-body text-on-background antialiased selection:bg-surface-variant selection:text-on-surface`}
         >
           {children}

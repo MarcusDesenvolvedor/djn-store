@@ -9,6 +9,8 @@ import {
   type CreateAdminCategoryInput,
 } from "@/features/category-admin/category-admin.schema";
 import type { Resolver } from "react-hook-form";
+import { describeUnknownError } from "@/lib/error-message";
+import { refreshClientRouter } from "@/lib/safe-router-refresh";
 
 export function CategoryCreateForm() {
   const router = useRouter();
@@ -23,25 +25,42 @@ export function CategoryCreateForm() {
     defaultValues: { name: "", imageUrl: "" },
   });
 
-  const onSubmit = handleSubmit(async (values) => {
+  const onValidatedSubmit = handleSubmit(async (values) => {
     setSubmitError(null);
-    const res = await fetch("/api/admin/categories", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(values),
-    });
-    const body = (await res.json()) as { error?: string };
-    if (!res.ok) {
-      setSubmitError(body.error ?? "Não foi possível criar a categoria");
-      return;
+    try {
+      const res = await fetch("/api/admin/categories", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(values),
+      });
+      let body: { error?: string } = {};
+      try {
+        body = (await res.json()) as { error?: string };
+      } catch {
+        body = {};
+      }
+      if (!res.ok) {
+        setSubmitError(body.error ?? "Não foi possível criar a categoria");
+        return;
+      }
+      reset({ name: "", imageUrl: "" });
+      refreshClientRouter(router);
+    } catch (err: unknown) {
+      setSubmitError(describeUnknownError(err));
     }
-    reset({ name: "", imageUrl: "" });
-    router.refresh();
   });
 
   return (
     <form
-      onSubmit={onSubmit}
+      onSubmit={(e) => {
+        try {
+          void Promise.resolve(onValidatedSubmit(e)).catch((reason: unknown) => {
+            setSubmitError(describeUnknownError(reason));
+          });
+        } catch (reason: unknown) {
+          setSubmitError(describeUnknownError(reason));
+        }
+      }}
       className="rounded border border-outline-variant bg-surface-container-lowest p-6 md:p-8"
       noValidate
     >
