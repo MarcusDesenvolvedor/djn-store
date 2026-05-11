@@ -30,7 +30,7 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider>
-      <html lang="pt-BR" className="dark" suppressHydrationWarning>
+      <html lang="pt-BR" className="scroll-smooth dark" suppressHydrationWarning>
         <head>
           {/* Stitch export uses Material Symbols; not covered by next/font */}
           {/* eslint-disable-next-line @next/next/no-page-custom-font -- Material Symbols stylesheet */}
