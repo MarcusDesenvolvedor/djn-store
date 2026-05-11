@@ -33,6 +33,90 @@ export type StorefrontProductView = {
   images: Array<{ id: string; url: string }>;
 };
 
+export type StorefrontCategoryRow = {
+  id: string;
+  name: string;
+  imageUrl: string | null;
+  activeProductCount: number;
+};
+
+export async function findAllCategoriesForStorefront(): Promise<StorefrontCategoryRow[]> {
+  const [categories, productCategoryIds] = await prisma.$transaction([
+    prisma.category.findMany({
+      orderBy: { name: "asc" },
+      select: { id: true, name: true, imageUrl: true },
+    }),
+    prisma.product.findMany({
+      where: { isActive: true },
+      select: { categoryId: true },
+    }),
+  ]);
+
+  const countMap = new Map<string, number>();
+  for (const row of productCategoryIds) {
+    countMap.set(row.categoryId, (countMap.get(row.categoryId) ?? 0) + 1);
+  }
+
+  return categories.map((c) => ({
+    id: c.id,
+    name: c.name,
+    imageUrl: c.imageUrl,
+    activeProductCount: countMap.get(c.id) ?? 0,
+  }));
+}
+
+export type StorefrontCategorySearchHitRow = {
+  id: string;
+  name: string;
+};
+
+export type StorefrontProductSearchHitRow = {
+  id: number;
+  name: string;
+  categoryName: string;
+};
+
+export async function searchCategoriesForStorefront(nameContains: string, take: number): Promise<
+  StorefrontCategorySearchHitRow[]
+> {
+  return prisma.category.findMany({
+    where: {
+      name: { contains: nameContains, mode: "insensitive" },
+    },
+    take,
+    orderBy: { name: "asc" },
+    select: { id: true, name: true },
+  });
+}
+
+export async function searchActiveProductsForStorefront(
+  term: string,
+  take: number,
+): Promise<StorefrontProductSearchHitRow[]> {
+  const rows = await prisma.product.findMany({
+    where: {
+      isActive: true,
+      OR: [
+        { name: { contains: term, mode: "insensitive" } },
+        { description: { contains: term, mode: "insensitive" } },
+      ],
+    },
+    take,
+    orderBy: { name: "asc" },
+    select: {
+      id: true,
+      name: true,
+      category: { select: { name: true } },
+    },
+  });
+
+  return rows.map((row) => ({
+    id: row.id,
+    name: row.name,
+    categoryName: row.category.name,
+  }));
+}
+
 export async function findProductByIdForStorefront(productId: number): Promise<StorefrontProductView | null> {
   const row = await prisma.product.findUnique({
     where: { id: productId },

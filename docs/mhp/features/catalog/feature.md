@@ -19,6 +19,21 @@ Expose **read-only catalog context** for supported ARPG titles: list games (cata
 - **Auth:** Public.
 - **Behavior:** Exibe um produto pelo ID numérico (preço, estoque, ativo/inativo, imagens, descrição), alinhado ao estado atual do cadastro — para preview a partir do admin e futura vitrine.
 
+### Public: list storefront categories
+
+- **Method / route:** `GET /api/categories`
+- **Auth:** Public.
+- **Response:** `{ "data": StorefrontCategoryListItem[] }` com `id`, `name`, `imageUrl`, `activeProductCount` (contagem apenas de produtos `isActive: true`).
+- **Errors:** `{ "error": string }` com `500` em falhas inesperadas.
+
+### Public: search categories and active products
+
+- **Method / route:** `GET /api/search?q=…`
+- **Auth:** Public.
+- **Query:** `q` obrigatório, `1–120` caracteres (trim), validação Zod (`catalog.schema.ts`).
+- **Response:** `{ "data": { "categories": { id, name }[], "products": { id, name, categoryName }[] } }` com limite aplicado pelo serviço.
+- **Errors:** `{ "error": string }` com `400` se `q` inválido ou `500` em falhas inesperadas.
+
 ## Business rules
 
 - Games are the **root** of catalog segmentation (`docs/mhp/data-model.md` Game aggregate).
@@ -32,13 +47,13 @@ Expose **read-only catalog context** for supported ARPG titles: list games (cata
 
 ## Implementation notes
 
-- **Layers:** `src/app/api/games/route.ts` (handler) → `catalog.service.ts` → `catalog.repository.ts` (only Prisma).
-- **Validation:** No query/body on initial `GET`; add Zod when filters/query params are introduced per `workflow-api-endpoint.md`.
+- **Layers:** `src/app/api/games/route.ts`, `src/app/api/categories/route.ts`, `src/app/api/search/route.ts` (thin handlers) → `catalog.service.ts` → `catalog.repository.ts` (only Prisma). Schemas públicas em `catalog.schema.ts`.
+- **Validation:** `GET /api/search` usa Zod (`storefrontSearchQuerySchema`); `GET /api/games` e `GET /api/categories` sem query/body.
 
 ## Out of scope (current slice)
 
 - Storefront home shell (hero) only; filtros e listagem completa de produtos na home.
 - Cart, checkout, pedidos no fluxo público.
 
-**Status:** Active (list games API + página pública de produto por ID)  
-**Version:** 1.1
+**Status:** Active (games + categorias vitrine + busca públicas + página produto por ID)  
+**Version:** 1.2

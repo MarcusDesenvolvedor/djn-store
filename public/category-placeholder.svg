@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600" fill="none">
+  <rect width="800" height="600" fill="#17171c"/>
+  <rect x="96" y="180" width="608" height="240" rx="4" stroke="#3f3f46" stroke-opacity="0.6" stroke-width="2"/>
+  <circle cx="400" cy="270" r="42" stroke="#52525b" stroke-width="2"/>
+  <path d="M370 296 L388 318 L436 266" stroke="#71717a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="400" y="380" fill="#71717a" font-family="system-ui,sans-serif" font-size="18" font-weight="500" text-anchor="middle">
+    DJN Store
+  </text>
+</svg>
