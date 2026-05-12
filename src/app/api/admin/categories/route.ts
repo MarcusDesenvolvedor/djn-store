@@ -1,24 +1,27 @@
 import { createAdminCategoryBodySchema } from "@/features/category-admin/category-admin.schema";
-import { createAdminCategory, listCategoriesForAdmin } from "@/features/category-admin/category-admin.service";
+import {
+  createAdminCategory,
+  listCategoryAdminFlatForAdmin,
+  listCategoryAdminTreeForAdmin,
+} from "@/features/category-admin/category-admin.service";
 import { requireAdminApiSession } from "@/features/admin/admin-access.service";
+import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
-export async function GET(): Promise<NextResponse> {
+export async function GET(request: NextRequest): Promise<NextResponse> {
   const gate = await requireAdminApiSession();
   if (!gate.ok) {
     return NextResponse.json({ error: "Unauthorized" }, { status: gate.status });
   }
 
   try {
-    const categories = await listCategoriesForAdmin();
-    const data = categories.map((c) => ({
-      id: c.id,
-      name: c.name,
-      imageUrl: c.imageUrl,
-      createdAt: c.createdAt.toISOString(),
-      productCount: c.productCount,
-    }));
-    return NextResponse.json({ data });
+    const flatRequested = request.nextUrl.searchParams.get("flat") === "1";
+    if (flatRequested) {
+      const rows = await listCategoryAdminFlatForAdmin();
+      return NextResponse.json({ data: rows });
+    }
+    const tree = await listCategoryAdminTreeForAdmin();
+    return NextResponse.json({ data: tree });
   } catch {
     return NextResponse.json({ error: "Failed to list categories" }, { status: 500 });
   }
@@ -45,6 +48,9 @@ export async function POST(request: Request): Promise<NextResponse> {
 
   const result = await createAdminCategory(parsed.data);
   if (!result.ok) {
+    if (result.error === "PARENT_NOT_FOUND") {
+      return NextResponse.json({ error: "Categoria pai não encontrada." }, { status: 400 });
+    }
     return NextResponse.json({ error: "Não foi possível criar a categoria" }, { status: 500 });
   }
 
@@ -56,7 +62,9 @@ export async function POST(request: Request): Promise<NextResponse> {
         imageUrl: result.category.imageUrl,
         createdAt: result.category.createdAt.toISOString(),
         productCount: result.category.productCount,
-      },    },
+        parentId: parsed.data.parentId ?? null,
+      },
+    },
     { status: 201 },
   );
 }
