@@ -12,6 +12,10 @@ import { CategoryDeleteButton } from "@/components/admin/category-delete-button"
 import { describeUnknownError } from "@/lib/error-message";
 import { refreshClientRouter } from "@/lib/safe-router-refresh";
 
+/** Botões de ação na linha da árvore (ícone + quadrado). */
+const treeActionIcon =
+  "flex h-9 w-9 shrink-0 items-center justify-center rounded border border-outline-variant text-on-surface-variant transition-colors hover:border-primary hover:bg-surface-container hover:text-primary disabled:cursor-not-allowed disabled:opacity-40";
+
 export type CategoryAdminTreeProps = {
   roots: CategoryAdminTreeSerializable[];
 };
@@ -122,7 +126,17 @@ function CategoryTreeBranch({
 }: CategoryTreeBranchProps): JSX.Element {
   const hasKids = node.children.length > 0;
   const isOpen = expanded[node.id] === true;
+  /** Painéis abaixo da linha somem quando o ramo com filhos está recolhido (como a lista de filhos). */
+  const showBranchPanels = !hasKids || isOpen;
   const paddingLeftPx = 8 + depth * 20;
+
+  function handleToggleBranch(): void {
+    if (hasKids && isOpen) {
+      setAddChildUnderId((cur) => (cur === node.id ? null : cur));
+      setEditingId((cur) => (cur === node.id ? null : cur));
+    }
+    toggleExpanded(node.id);
+  }
 
   return (
     <li className="border-b border-outline-variant/70 last:border-b-0">
@@ -131,7 +145,7 @@ function CategoryTreeBranch({
           <button
             type="button"
             aria-expanded={isOpen}
-            onClick={() => toggleExpanded(node.id)}
+            onClick={handleToggleBranch}
             title={isOpen ? "Recolher" : "Expandir"}
             className="flex h-8 w-8 shrink-0 items-center justify-center rounded text-on-surface-variant transition-colors hover:bg-surface-container"
           >
@@ -173,18 +187,20 @@ function CategoryTreeBranch({
           </p>
         </div>
 
-        <div className="flex flex-shrink-0 flex-wrap items-center justify-end gap-2">
+        <div className="flex flex-shrink-0 items-center gap-1">
           <button
             type="button"
             onClick={() => {
               setAddChildUnderId((cur) => (cur === node.id ? null : node.id));
               setEditingId(null);
             }}
-            title="Nova subcategoria"
-            className="flex items-center gap-1 rounded border border-outline-variant px-2 py-1.5 font-body-sm font-medium text-on-surface-variant transition-colors hover:border-primary hover:text-primary"
+            title="Adicionar subcategoria"
+            aria-label="Adicionar subcategoria"
+            aria-pressed={addChildUnderId === node.id}
+            className={`${treeActionIcon} ${addChildUnderId === node.id ? "border-primary text-primary" : ""}`}
           >
-            <span className="material-symbols-outlined text-[18px]" aria-hidden>
-              add_box
+            <span className="material-symbols-outlined text-[20px]" aria-hidden>
+              post_add
             </span>
           </button>
           <button
@@ -194,9 +210,13 @@ function CategoryTreeBranch({
               setAddChildUnderId(null);
             }}
             title="Editar nome e imagem"
-            className="rounded px-3 py-1.5 font-body-sm font-medium uppercase tracking-wide text-primary underline-offset-4 hover:underline"
+            aria-label="Editar nome e imagem"
+            aria-pressed={editingId === node.id}
+            className={`${treeActionIcon} ${editingId === node.id ? "border-primary text-primary" : ""}`}
           >
-            Editar
+            <span className="material-symbols-outlined text-[20px]" aria-hidden>
+              edit
+            </span>
           </button>
           <CategoryDeleteButton
             categoryId={node.id}
@@ -207,7 +227,7 @@ function CategoryTreeBranch({
         </div>
       </div>
 
-      {addChildUnderId === node.id ? (
+      {addChildUnderId === node.id && showBranchPanels ? (
         <div className="border-t border-outline-variant/50 bg-surface-container-lowest/50 px-3 py-4">
           <CategoryCreateInlineForm
             subtitle="Subcategoria — será criada logo abaixo deste nível na árvore."
@@ -223,7 +243,7 @@ function CategoryTreeBranch({
         </div>
       ) : null}
 
-      {editingId === node.id ? (
+      {editingId === node.id && showBranchPanels ? (
         <div className="border-t border-outline-variant/50 bg-surface-container-lowest/60 px-3 py-4">
           <CategoryEditInlineForm
             categoryId={node.id}
@@ -330,7 +350,7 @@ function CategoryCreateInlineForm({
           {error}
         </div>
       ) : null}
-      <div className="mt-4 grid gap-4 md:grid-cols-2">
+      <div className="mt-4 flex flex-col gap-4">
         <div className="space-y-2">
           <label className="font-meta-mono text-meta-mono uppercase tracking-widest text-on-surface-variant">
             Nome
@@ -447,7 +467,7 @@ function CategoryEditInlineForm({
           {error}
         </div>
       ) : null}
-      <div className="mt-4 grid gap-4 md:grid-cols-2">
+      <div className="mt-4 flex flex-col gap-4">
         <div className="space-y-2">
           <label className="font-meta-mono text-meta-mono uppercase tracking-widest text-on-surface-variant">
             Nome

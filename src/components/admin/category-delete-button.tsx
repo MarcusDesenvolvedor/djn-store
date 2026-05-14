@@ -5,11 +5,16 @@ import { useState } from "react";
 import { describeUnknownError } from "@/lib/error-message";
 import { refreshClientRouter } from "@/lib/safe-router-refresh";
 
+const actionIconClass =
+  "flex h-9 w-9 shrink-0 items-center justify-center rounded border border-outline-variant text-on-surface-variant transition-colors hover:border-error hover:bg-surface-container hover:text-error disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-outline-variant disabled:hover:text-on-surface-variant";
+
 export type CategoryDeleteButtonProps = {
   categoryId: string;
   categoryName: string;
   productCount: number;
   childCount: number;
+  /** `icon` = apenas ícone (padrão na árvore); `text` = rótulo “Excluir”. */
+  variant?: "icon" | "text";
 };
 
 export function CategoryDeleteButton({
@@ -17,6 +22,7 @@ export function CategoryDeleteButton({
   categoryName,
   productCount,
   childCount,
+  variant = "icon",
 }: CategoryDeleteButtonProps) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
@@ -80,9 +86,28 @@ export function CategoryDeleteButton({
         }}
         disabled={blocked}
         title={blockTitle}
-        className="rounded border border-outline-variant px-3 py-1.5 font-meta-mono text-meta-mono uppercase tracking-wider text-on-surface-variant transition-colors hover:border-error hover:text-error disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-outline-variant disabled:hover:text-on-surface-variant"
+        aria-label={blockTitle}
+        className={
+          variant === "icon"
+            ? actionIconClass
+            : "rounded border border-outline-variant px-3 py-1.5 font-meta-mono text-meta-mono uppercase tracking-wider text-on-surface-variant transition-colors hover:border-error hover:text-error disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-outline-variant disabled:hover:text-on-surface-variant"
+        }
       >
-        {pending ? "…" : "Excluir"}
+        {variant === "icon" ? (
+          <>
+            <span className="sr-only">Excluir categoria</span>
+            <span
+              className={`material-symbols-outlined text-[20px] ${pending ? "animate-pulse opacity-70" : ""}`}
+              aria-hidden
+            >
+              {pending ? "progress_activity" : "delete_outline"}
+            </span>
+          </>
+        ) : pending ? (
+          "…"
+        ) : (
+          "Excluir"
+        )}
       </button>
       {error ? <p className="max-w-[200px] text-right font-body-sm text-body-sm text-error">{error}</p> : null}
     </div>
