@@ -48,7 +48,7 @@ export function VaultArpgHome({ categories }: VaultArpgHomeProps) {
   const navCategories = categories.slice(0, NAV_ITEMS_MAX);
 
   return (
-    <>
+    <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-50 border-b border-outline-variant bg-surface dark:bg-surface">
         <div className="mx-auto flex h-16 w-full max-w-container-max items-center justify-between gap-gutter px-margin-page">
           <div className="flex min-w-0 flex-1 items-center gap-gutter">
@@ -97,7 +97,7 @@ export function VaultArpgHome({ categories }: VaultArpgHomeProps) {
         </div>
       </header>
 
-      <main className="flex grow flex-col">
+      <main className="flex flex-col">
         <section className="relative flex flex-col items-center justify-center overflow-hidden px-margin-page pb-section-gap pt-32 text-center">
           <div className="pointer-events-none absolute inset-0 scanline-bg opacity-30" />
           <div className="pointer-events-none absolute left-1/2 top-1/2 h-[600px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-surface-variant/20 blur-[100px]" />
@@ -287,6 +287,6 @@ export function VaultArpgHome({ categories }: VaultArpgHomeProps) {
           </nav>
         </div>
       </footer>
-    </>
+    </div>
   );
 }

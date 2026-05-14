@@ -41,7 +41,7 @@ export default function RootLayout({
         </head>
         <body
           suppressHydrationWarning
-          className={`${inter.variable} ${spaceGrotesk.variable} flex min-h-screen flex-col bg-background font-body text-on-background antialiased selection:bg-surface-variant selection:text-on-surface`}
+          className={`${inter.variable} ${spaceGrotesk.variable} min-h-screen bg-background font-body text-on-background antialiased selection:bg-surface-variant selection:text-on-surface`}
         >
           {children}
         </body>

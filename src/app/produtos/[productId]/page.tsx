@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import DOMPurify from "isomorphic-dompurify";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getStorefrontProduct } from "@/features/catalog/catalog.service";
@@ -23,10 +24,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const id = parseProductId(productId);
   const product = id !== null ? await getStorefrontProduct(id) : null;
   const titleSuffix = product ? ` — ${product.name}` : " — Produto";
+  const snippet =
+    product && product.shortDescription.trim().length > 0
+      ? product.shortDescription
+      : (product?.description ?? "");
   const description =
-    product?.description.length && product.description.length > 160
-      ? `${product.description.slice(0, 157)}…`
-      : product?.description;
+    snippet.length > 160 ? `${snippet.slice(0, 157)}…` : snippet.length > 0 ? snippet : undefined;
   return {
     title: `DJN Store${titleSuffix}`,
     description: description ?? "Detalhes do produto na loja pública.",
@@ -47,6 +50,15 @@ export default async function PublicProductPage({ params }: Props) {
 
   const canPurchase = product.isActive && product.stock > 0;
   const primaryImage = product.images[0]?.url ?? null;
+  const primaryAlt = product.images[0]?.altText?.trim() || product.name;
+
+  const safeLongHtml =
+    product.longDescriptionRich !== null && product.longDescriptionRich.trim().length > 0
+      ? DOMPurify.sanitize(product.longDescriptionRich, { USE_PROFILES: { html: true } })
+      : null;
+
+  const shortPlain =
+    product.shortDescription.trim().length > 0 ? product.shortDescription : product.description;
 
   return (
     <div className="flex min-h-screen flex-col bg-background text-on-surface">
@@ -64,7 +76,7 @@ export default async function PublicProductPage({ params }: Props) {
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-container-max flex-1 px-margin-page py-10">
+      <main className="mx-auto w-full max-w-container-max px-margin-page py-10">
         <nav className="mb-8 font-body-sm text-body-sm text-on-surface-variant">
           <Link href="/" className="transition-colors hover:text-primary">
             Início
@@ -79,7 +91,7 @@ export default async function PublicProductPage({ params }: Props) {
           <div className="aspect-square w-full overflow-hidden rounded border border-outline-variant bg-surface-container-lowest">
             {primaryImage ? (
               // eslint-disable-next-line @next/next/no-img-element -- arbitrary image URLs from catalog
-              <img src={primaryImage} alt="" className="h-full w-full object-cover" />
+              <img src={primaryImage} alt={primaryAlt} className="h-full w-full object-cover" />
             ) : (
               <div className="flex h-full w-full items-center justify-center text-on-surface-variant">
                 <span className="material-symbols-outlined text-[72px]" aria-hidden>
@@ -122,7 +134,19 @@ export default async function PublicProductPage({ params }: Props) {
 
             <div className="mt-6 border-t border-outline-variant pt-6">
               <h2 className="mb-2 font-h3 text-h3 text-on-surface">Descrição</h2>
-              <p className="whitespace-pre-wrap font-body text-body text-on-surface-variant">{product.description}</p>
+              {safeLongHtml ? (
+                <div className="space-y-4">
+                  {shortPlain.trim().length > 0 ? (
+                    <p className="whitespace-pre-wrap font-body text-body text-on-surface-variant">{shortPlain}</p>
+                  ) : null}
+                  <div
+                    className="product-rich-text max-w-none space-y-3 font-body text-body text-on-surface-variant [&_a]:text-primary [&_a]:underline [&_h2]:mt-4 [&_h2]:font-h3 [&_h2]:text-h3 [&_h2]:text-on-surface [&_h3]:mt-3 [&_h3]:font-semibold [&_li]:my-1 [&_ol]:list-decimal [&_ol]:pl-6 [&_p]:leading-relaxed [&_strong]:text-on-surface [&_ul]:list-disc [&_ul]:pl-6"
+                    dangerouslySetInnerHTML={{ __html: safeLongHtml }}
+                  />
+                </div>
+              ) : (
+                <p className="whitespace-pre-wrap font-body text-body text-on-surface-variant">{shortPlain}</p>
+              )}
             </div>
 
             {product.images.length > 1 ? (
@@ -132,7 +156,11 @@ export default async function PublicProductPage({ params }: Props) {
                   {product.images.slice(1).map((img) => (
                     <li key={img.id} className="h-20 w-20 overflow-hidden rounded border border-outline-variant">
                       {/* eslint-disable-next-line @next/next/no-img-element -- catalog image URLs */}
-                      <img src={img.url} alt="" className="h-full w-full object-cover" />
+                      <img
+                        src={img.url}
+                        alt={img.altText?.trim() || product.name}
+                        className="h-full w-full object-cover"
+                      />
                     </li>
                   ))}
                 </ul>

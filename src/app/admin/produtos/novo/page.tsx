@@ -7,7 +7,7 @@ export const metadata: Metadata = {
 
 export default async function AdminNovoProdutoPage() {
   return (
-    <div className="mx-auto max-w-3xl pb-8">
+    <div className="mx-auto max-w-3xl">
       <ProductCreateForm />
     </div>
   );

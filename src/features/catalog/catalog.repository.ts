@@ -24,13 +24,15 @@ export async function findAllGamesForList(): Promise<GameListRow[]> {
 export type StorefrontProductView = {
   id: number;
   name: string;
+  shortDescription: string;
   description: string;
+  longDescriptionRich: string | null;
   priceStr: string;
   stock: number;
   isActive: boolean;
   brand: string | null;
   categoryName: string;
-  images: Array<{ id: string; url: string }>;
+  images: Array<{ id: string; url: string; isPrimary: boolean; altText: string | null }>;
 };
 
 export type StorefrontCategoryRow = {
@@ -99,6 +101,7 @@ export async function searchActiveProductsForStorefront(
       OR: [
         { name: { contains: term, mode: "insensitive" } },
         { description: { contains: term, mode: "insensitive" } },
+        { shortDescription: { contains: term, mode: "insensitive" } },
       ],
     },
     take,
@@ -123,13 +126,18 @@ export async function findProductByIdForStorefront(productId: number): Promise<S
     select: {
       id: true,
       name: true,
+      shortDescription: true,
       description: true,
+      longDescriptionRich: true,
       price: true,
       stock: true,
       isActive: true,
       brand: true,
       category: { select: { name: true } },
-      images: { orderBy: { createdAt: "asc" }, select: { id: true, url: true } },
+      images: {
+        orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }],
+        select: { id: true, url: true, isPrimary: true, altText: true },
+      },
     },
   });
   if (!row) {
@@ -138,7 +146,9 @@ export async function findProductByIdForStorefront(productId: number): Promise<S
   return {
     id: row.id,
     name: row.name,
+    shortDescription: row.shortDescription,
     description: row.description,
+    longDescriptionRich: row.longDescriptionRich,
     priceStr: row.price.toString(),
     stock: row.stock,
     isActive: row.isActive,

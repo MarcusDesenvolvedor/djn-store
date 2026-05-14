@@ -54,6 +54,19 @@ export async function POST(request: Request): Promise<NextResponse> {
   if (!result.ok) {
     const map: Record<typeof result.error, { status: number; message: string }> = {
       CATEGORY_NOT_FOUND: { status: 400, message: "Categoria não encontrada" },
+      CATEGORY_NOT_LEAF: {
+        status: 400,
+        message:
+          "Escolha uma categoria folha (último nível). Expanda a árvore até um nó sem filhos — nós intermediários não aceitam produto.",
+      },
+      SKU_DUPLICATE: {
+        status: 400,
+        message: "Conflito ao gerar SKU do produto — tente novamente; se persistir, contate suporte técnico",
+      },
+      VARIANT_SKU_DUPLICATE: {
+        status: 400,
+        message: "Uma ou mais variantes usam SKU já vinculado a outra variante deste produto — ajuste os códigos",
+      },
       UNKNOWN: { status: 500, message: "Não foi possível criar o produto" },
     };
     const err = map[result.error];
