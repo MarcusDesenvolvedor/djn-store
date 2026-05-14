@@ -6,6 +6,7 @@ import type { FocusEvent } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { CategoryPickerModal } from "@/components/admin/category-picker-modal";
+import { AdminFormBusyOverlay, AdminInlineSpinner } from "@/components/admin/admin-loading";
 import { ProductRichTextEditor } from "@/components/admin/product-rich-text-editor";
 import type { CategoryAdminTreeSerializable } from "@/features/category-admin/category-admin.types";
 import {
@@ -262,96 +263,98 @@ export function ProductCreateForm() {
     setVariantRows((rows) => rows.map((r) => (r.tempId === tempId ? { ...r, ...patch } : r)));
   }, []);
 
-  const onValidatedSubmit = handleSubmit((values) => {
-    setSubmitError(null);
-    clearErrors();
+  const onValidatedSubmit = handleSubmit(async (values) => {
+    try {
+      setSubmitError(null);
+      clearErrors();
 
-    const danglingLocal = mediaRows.some((r) => r.file !== undefined && r.url.trim().length === 0);
-    if (danglingLocal) {
-      setSubmitError(
-        "Há imagens apenas locais sem URL pública. Publique em um CDN ou storage e cole o link — upload direto ainda não está integrado.",
-      );
-      return;
-    }
-
-    const strayVariantNeedsCombo = variantRows.some((r) => {
-      const comboEmpty = r.combination.trim().length === 0;
-      const hasSignal =
-        r.stock > 0 ||
-        r.sku.trim().length > 0 ||
-        (r.salePrice !== null && r.salePrice !== undefined && Number(r.salePrice) > 0);
-      return comboEmpty && hasSignal;
-    });
-    if (strayVariantNeedsCombo) {
-      setSubmitError(
-        "Variantes com estoque ou SKU/preço precisam de uma combinação (rótulo). Remova linhas em branco ou preencha o texto.",
-      );
-      return;
-    }
-
-    const imageAssets = mediaRows
-      .map((r) => ({
-        url: r.url.trim(),
-        altText: r.altText.trim().length > 0 ? r.altText.trim() : null,
-        isPrimary: r.isPrimary,
-      }))
-      .filter((r) => r.url.length > 0);
-
-    const variantsPayload = activeVariantPayloadRows.map((r) => ({
-      sku: r.sku.trim().length === 0 ? null : r.sku.trim().slice(0, 80),
-      attributes: { combo: r.combination.trim().slice(0, 120) },
-      salePrice: r.salePrice,
-      stock: r.stock,
-    }));
-
-    const parsed = createAdminProductBodySchema.safeParse({
-      ...values,
-      longDescriptionRich: longHtmlRef.current.length > 0 ? longHtmlRef.current : values.longDescriptionRich,
-      brand: values.brand.trim().length > 0 ? values.brand.trim() : null,
-      promoEndsAt: values.promoEndsAt.trim().length === 0 ? null : values.promoEndsAt,
-      imageAssets,
-      variants: variantsPayload,
-    });
-
-    if (!parsed.success) {
-      const issue = parsed.error.issues[0];
-      const path0 = issue?.path[0];
-      if (typeof path0 === "string") {
-        setError(path0 as keyof CreateAdminProductFormValues, {
-          type: "manual",
-          message: issue.message,
-        });
+      const danglingLocal = mediaRows.some((r) => r.file !== undefined && r.url.trim().length === 0);
+      if (danglingLocal) {
+        setSubmitError(
+          "Há imagens apenas locais sem URL pública. Publique em um CDN ou storage e cole o link — upload direto ainda não está integrado.",
+        );
+        return;
       }
-      setSubmitError(issue?.message ?? "Dados inválidos");
-      return;
-    }
 
-    void (async () => {
+      const strayVariantNeedsCombo = variantRows.some((r) => {
+        const comboEmpty = r.combination.trim().length === 0;
+        const hasSignal =
+          r.stock > 0 ||
+          r.sku.trim().length > 0 ||
+          (r.salePrice !== null && r.salePrice !== undefined && Number(r.salePrice) > 0);
+        return comboEmpty && hasSignal;
+      });
+      if (strayVariantNeedsCombo) {
+        setSubmitError(
+          "Variantes com estoque ou SKU/preço precisam de uma combinação (rótulo). Remova linhas em branco ou preencha o texto.",
+        );
+        return;
+      }
+
+      const imageAssets = mediaRows
+        .map((r) => ({
+          url: r.url.trim(),
+          altText: r.altText.trim().length > 0 ? r.altText.trim() : null,
+          isPrimary: r.isPrimary,
+        }))
+        .filter((r) => r.url.length > 0);
+
+      const variantsPayload = activeVariantPayloadRows.map((r) => ({
+        sku: r.sku.trim().length === 0 ? null : r.sku.trim().slice(0, 80),
+        attributes: { combo: r.combination.trim().slice(0, 120) },
+        salePrice: r.salePrice,
+        stock: r.stock,
+      }));
+
+      const parsed = createAdminProductBodySchema.safeParse({
+        ...values,
+        longDescriptionRich: longHtmlRef.current.length > 0 ? longHtmlRef.current : values.longDescriptionRich,
+        brand: values.brand.trim().length > 0 ? values.brand.trim() : null,
+        promoEndsAt: values.promoEndsAt.trim().length === 0 ? null : values.promoEndsAt,
+        imageAssets,
+        variants: variantsPayload,
+      });
+
+      if (!parsed.success) {
+        const issue = parsed.error.issues[0];
+        const path0 = issue?.path[0];
+        if (typeof path0 === "string") {
+          setError(path0 as keyof CreateAdminProductFormValues, {
+            type: "manual",
+            message: issue.message,
+          });
+        }
+        setSubmitError(issue?.message ?? "Dados inválidos");
+        return;
+      }
+
+      setCategoryModalOpen(false);
+
+      const res = await fetch("/api/admin/products", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(parsed.data),
+      });
+      let bodyJson: { error?: string } = {};
       try {
-        const res = await fetch("/api/admin/products", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(parsed.data),
-        });
-        let body: { error?: string } = {};
-        try {
-          body = (await res.json()) as { error?: string };
-        } catch {
-          body = {};
-        }
-        if (!res.ok) {
-          setSubmitError(body.error ?? "Não foi possível criar o produto");
-          return;
-        }
-        void Promise.resolve(router.push("/admin/produtos")).catch(() => undefined);
-        refreshClientRouter(router);
-      } catch (err: unknown) {
-        setSubmitError(describeUnknownError(err));
+        bodyJson = (await res.json()) as { error?: string };
+      } catch {
+        bodyJson = {};
       }
-    })();
+      if (!res.ok) {
+        setSubmitError(bodyJson.error ?? "Não foi possível criar o produto");
+        return;
+      }
+      void Promise.resolve(router.push("/admin/produtos")).catch(() => undefined);
+      refreshClientRouter(router);
+    } catch (err: unknown) {
+      setSubmitError(describeUnknownError(err));
+    }
   });
 
-  const categoryPickerDisabled = loadingCats || categoriesError !== null;
+  const categoryPickerDisabled = loadingCats || categoriesError !== null || isSubmitting;
+
+  const formBusy = loadingCats || isSubmitting;
 
   const stockLockedByVariants = activeVariantPayloadRows.length > 0;
 
@@ -371,19 +374,19 @@ export function ProductCreateForm() {
       />
 
       <form
-        onSubmit={(e) => {
-          try {
-            void Promise.resolve(onValidatedSubmit(e)).catch((reason: unknown) => {
-              setSubmitError(describeUnknownError(reason));
-            });
-          } catch (reason: unknown) {
-            setSubmitError(describeUnknownError(reason));
-          }
-        }}
-        className="space-y-10 rounded border border-outline-variant bg-surface-container-lowest p-6 md:p-8"
+        onSubmit={onValidatedSubmit}
+        aria-busy={formBusy}
+        className="relative space-y-10 rounded border border-outline-variant bg-surface-container-lowest p-6 md:p-8"
         noValidate
       >
-        <div className="flex flex-wrap items-start justify-between gap-4 border-b border-outline-variant pb-6">
+        {formBusy ? (
+          <AdminFormBusyOverlay
+            message={loadingCats ? "Carregando categorias para o formulário…" : "Salvando produto no catálogo…"}
+          />
+        ) : null}
+        <fieldset disabled={formBusy} className="mx-0 min-w-0 space-y-10 border-0 p-0 disabled:opacity-95">
+          <legend className="sr-only">Dados do produto</legend>
+          <div className="flex flex-wrap items-start justify-between gap-4 border-b border-outline-variant pb-6">
           <div>
             <h2 className="font-h3 text-h3 text-on-surface">Novo produto</h2>
             <p className="mt-1 max-w-prose font-body-sm text-body-sm text-on-surface-variant">
@@ -392,12 +395,18 @@ export function ProductCreateForm() {
               próprio.
             </p>
           </div>
-          <Link
-            href="/admin/produtos"
-            className="font-body-sm text-body-sm text-on-surface-variant underline-offset-4 transition-colors hover:text-on-surface hover:underline"
-          >
-            Voltar à lista
-          </Link>
+          {isSubmitting ? (
+            <span className="font-body-sm text-body-sm text-on-surface-variant/70" aria-live="polite">
+              Salvando…
+            </span>
+          ) : (
+            <Link
+              href="/admin/produtos"
+              className="font-body-sm text-body-sm text-on-surface-variant underline-offset-4 transition-colors hover:text-on-surface hover:underline"
+            >
+              Voltar à lista
+            </Link>
+          )}
         </div>
 
         {submitError ? (
@@ -440,12 +449,15 @@ export function ProductCreateForm() {
                 }}
                 className="flex w-full items-center justify-between gap-3 rounded border border-outline-variant bg-background px-3 py-3 text-left font-body text-body text-on-surface outline-none ring-primary transition-colors hover:border-primary focus:border-transparent focus:ring-1 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                <span className={categoryPathLabel.length > 0 ? "text-on-surface" : "text-on-surface-variant"}>
-                  {loadingCats
-                    ? "Carregando categorias…"
-                    : categoryPathLabel.length > 0
-                      ? categoryPathLabel
-                      : "Toque para escolher uma categoria folha…"}
+                <span className="flex min-w-0 items-center gap-2">
+                  {loadingCats ? <AdminInlineSpinner className="h-5 w-5 shrink-0" aria-hidden /> : null}
+                  <span className={`min-w-0 ${categoryPathLabel.length > 0 ? "text-on-surface" : "text-on-surface-variant"}`}>
+                    {loadingCats
+                      ? "Carregando categorias…"
+                      : categoryPathLabel.length > 0
+                        ? categoryPathLabel
+                        : "Toque para escolher uma categoria folha…"}
+                  </span>
                 </span>
                 <span className="material-symbols-outlined shrink-0 text-[22px] text-on-surface-variant" aria-hidden>
                   expand_more
@@ -497,7 +509,7 @@ export function ProductCreateForm() {
               </label>
               <ProductRichTextEditor
                 id="long-rich"
-                disabled={isSubmitting}
+                disabled={formBusy}
                 onHtmlChange={(html) => {
                   longHtmlRef.current = html;
                   setValue("longDescriptionRich", html, { shouldDirty: true });
@@ -978,20 +990,34 @@ export function ProductCreateForm() {
             </div>
           </div>
         </FormSection>
+        </fieldset>
 
         <div className="flex flex-wrap justify-end gap-3 border-t border-outline-variant pt-6">
-          <Link
-            href="/admin/produtos"
-            className="rounded border border-outline-variant px-6 py-2.5 font-button text-button text-on-surface transition-colors hover:bg-surface-container"
-          >
-            Cancelar
-          </Link>
+          {isSubmitting ? (
+            <span className="rounded border border-outline-variant px-6 py-2.5 font-button text-button text-on-surface-variant/70">
+              Cancelar
+            </span>
+          ) : (
+            <Link
+              href="/admin/produtos"
+              className="rounded border border-outline-variant px-6 py-2.5 font-button text-button text-on-surface transition-colors hover:bg-surface-container"
+            >
+              Cancelar
+            </Link>
+          )}
           <button
             type="submit"
-            disabled={isSubmitting}
-            className="micro-chamfer bg-on-surface px-8 py-2.5 font-button text-button text-surface transition-colors hover:bg-primary disabled:cursor-not-allowed disabled:opacity-60"
+            disabled={formBusy}
+            className="micro-chamfer inline-flex items-center justify-center gap-2 bg-on-surface px-8 py-2.5 font-button text-button text-surface transition-colors hover:bg-primary disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {isSubmitting ? "Salvando…" : "Criar produto"}
+            {isSubmitting ? (
+              <>
+                <AdminInlineSpinner className="h-5 w-5 border-surface border-t-transparent" aria-hidden />
+                Salvando…
+              </>
+            ) : (
+              "Criar produto"
+            )}
           </button>
         </div>
       </form>
