@@ -15,7 +15,7 @@ Permitir que staff autenticado (Clerk + regras admin) **cadastre produtos** no c
 
 ### Listar categorias (admin API)
 
-- **GET** `/api/admin/categories` → `{ "data": { id, name, createdAt }[] }` para popular o formulário de produto (implementação em `category-admin`).
+- **GET** `/api/admin/categories?flat=1` → `{ "data": { id, name, … }[] }` (lista plana) para popular o select de produto (implementação em `category-admin`).
 
 ### Listar produtos (admin API)
 
@@ -38,7 +38,7 @@ Permitir que staff autenticado (Clerk + regras admin) **cadastre produtos** no c
 |--------|------|------|
 | POST | `/api/admin/products` | Admin |
 | GET | `/api/admin/products` | Admin |
-| GET | `/api/admin/categories` | Admin |
+| GET | `/api/admin/categories` (árvore) ou `/api/admin/categories?flat=1` (select) | Admin |
 
 Respostas: sucesso `{ "data": ... }`; erro `{ "error": "message" }`.
 

@@ -54,17 +54,20 @@ export function ProductCreateForm() {
     setLoadingCats(true);
     setCategoriesError(null);
 
-    void fetch("/api/admin/categories")
+    void fetch("/api/admin/categories?flat=1")
       .then(async (res) => {
         const body = (await res.json()) as {
-          data?: { id: string; name: string; createdAt?: string }[];
+          data?: { id: string; name: string }[];
           error?: string;
         };
         if (!res.ok) {
           throw new Error(body.error ?? "Erro ao carregar categorias");
         }
         if (!cancelled) {
-          setCategories(body.data ?? []);
+          const list = body.data ?? [];
+          setCategories(
+            [...list].sort((a, b) => a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" })),
+          );
         }
       })
       .catch((error: unknown) => {
