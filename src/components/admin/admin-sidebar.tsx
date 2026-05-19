@@ -6,8 +6,8 @@ import { usePathname } from "next/navigation";
 const NAV_ITEMS = [
   { href: "/admin", label: "Dashboard", icon: "dashboard", match: "exact" as const },
   { href: "/admin/produtos", label: "Produtos", icon: "inventory_2", match: "prefix" as const },
-  { href: "/admin/categorias", label: "Categorias", icon: "category", match: "prefix" as const },
   { href: "/admin/pedidos", label: "Pedidos", icon: "receipt_long", match: "prefix" as const },
+  { href: "/admin/clientes", label: "Clientes", icon: "group", match: "prefix" as const },
   { href: "/admin/configuracoes", label: "Configurações", icon: "settings", match: "prefix" as const },
 ];
 
