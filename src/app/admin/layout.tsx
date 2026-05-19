@@ -31,7 +31,7 @@ export default async function AdminLayout({
     <div className="flex h-screen min-h-0 overflow-hidden bg-background">
       <AdminSidebar />
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-        <AdminTopBar sessionEmail={email ?? null} openAdminAccess={openAdminAccess} />
+        <AdminTopBar openAdminAccess={openAdminAccess} />
         <main className="flex-1 min-h-0 overflow-y-auto px-margin-page py-8">{children}</main>
       </div>
     </div>

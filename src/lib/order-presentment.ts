@@ -1,10 +1,11 @@
 import type { OrderStatus, PaymentStatus } from "@prisma/client";
 
+/** Admin/dashboard copy: agrupa `PAID` e `FULFILLING` em “Em Separação”; `DELIVERED` como “Enviado”. Ver `feature.md`. */
 export const ORDER_STATUS_PT: Record<OrderStatus, string> = {
-  PENDING_PAYMENT: "Aguardando pagamento",
-  PAID: "Pago",
-  FULFILLING: "Em separação",
-  DELIVERED: "Entregue",
+  PENDING_PAYMENT: "Aguardando Pagamento",
+  PAID: "Em Separação",
+  FULFILLING: "Em Separação",
+  DELIVERED: "Enviado",
   CANCELED: "Cancelado",
 };
 
